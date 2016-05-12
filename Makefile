@@ -14,7 +14,6 @@
 # ARE EXPRESSLY DISCLAIMED.  The License provides additional details about
 # this warranty disclaimer.
 
-
 mwifiex-y += main.o
 mwifiex-y += init.o
 mwifiex-y += cfp.o
@@ -43,15 +42,23 @@ mwifiex-y += ethtool.o
 mwifiex-y += 11h.o
 mwifiex-y += tdls.o
 mwifiex-$(CONFIG_DEBUG_FS) += debugfs.o
-obj-$(CONFIG_MWIFIEX) += mwifiex.o
+obj-m := mwifiex.o
 
 mwifiex_sdio-y += sdio.o
-obj-$(CONFIG_MWIFIEX_SDIO) += mwifiex_sdio.o
+obj-m += mwifiex_sdio.o
 
 mwifiex_pcie-y += pcie.o
-obj-$(CONFIG_MWIFIEX_PCIE) += mwifiex_pcie.o
+obj-m += mwifiex_pcie.o
 
 mwifiex_usb-y += usb.o
-obj-$(CONFIG_MWIFIEX_USB) += mwifiex_usb.o
+obj-m += mwifiex_usb.o
 
 ccflags-y += -D__CHECK_ENDIAN
+
+KDIR := /lib/modules/$(shell uname -r)/build
+PWD := $(shell pwd)
+default:
+	$(MAKE) -C $(KDIR) SUBDIRS=$(PWD) modules
+
+install:
+	$(MAKE) -C $(KDIR) SUBDIRS=$(PWD) modules_install
