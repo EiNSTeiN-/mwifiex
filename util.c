@@ -386,8 +386,10 @@ mwifiex_process_mgmt_packet(struct mwifiex_private *priv,
 	u16 pkt_len;
 	struct ieee80211_hdr *ieee_hdr;
 
-	if (!skb)
+	if (!skb) {
+		mwifiex_dbg(priv->adapter, ERROR, "no skb\n");
 		return -1;
+	}
 
 	if (!priv->mgmt_frame_mask ||
 	    priv->wdev.iftype == NL80211_IFTYPE_UNSPECIFIED) {

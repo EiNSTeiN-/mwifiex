@@ -431,6 +431,7 @@ static int mwifiex_pm_wakeup_card_complete(struct mwifiex_adapter *adapter)
  */
 static int mwifiex_pcie_disable_host_int(struct mwifiex_adapter *adapter)
 {
+	mwifiex_dbg(adapter, ERROR, "disable_host_int\n");
 	if (mwifiex_pcie_ok_to_access_hw(adapter)) {
 		if (mwifiex_write_reg(adapter, PCIE_HOST_INT_MASK,
 				      0x00000000)) {
@@ -439,6 +440,9 @@ static int mwifiex_pcie_disable_host_int(struct mwifiex_adapter *adapter)
 			return -1;
 		}
 	}
+	else
+		mwifiex_dbg(adapter, ERROR, "Did NOT really disable host interrupt\n");
+
 
 	return 0;
 }
@@ -451,6 +455,7 @@ static int mwifiex_pcie_disable_host_int(struct mwifiex_adapter *adapter)
  */
 static int mwifiex_pcie_enable_host_int(struct mwifiex_adapter *adapter)
 {
+	mwifiex_dbg(adapter, ERROR, "enable_host_int\n");
 	if (mwifiex_pcie_ok_to_access_hw(adapter)) {
 		/* Simply write the mask to the register */
 		if (mwifiex_write_reg(adapter, PCIE_HOST_INT_MASK,
@@ -1603,6 +1608,9 @@ static int mwifiex_pcie_process_cmd_complete(struct mwifiex_adapter *adapter)
 
 	mwifiex_dbg(adapter, CMD,
 		    "info: Rx CMD Response\n");
+	mwifiex_dbg(adapter, ERROR, "jpw: %s skb %p: len %d, data_len %d, head %p,"
+		"data %p, tail %d, end %d\n", __func__, skb, skb->len, skb->data_len, skb->head,
+		skb->data, skb->tail, skb->end);
 
 	mwifiex_unmap_pci_memory(adapter, skb, PCI_DMA_FROMDEVICE);
 
@@ -1615,6 +1623,13 @@ static int mwifiex_pcie_process_cmd_complete(struct mwifiex_adapter *adapter)
 
 	pkt_len = *((__le16 *)skb->data);
 	rx_len = le16_to_cpu(pkt_len);
+	if(rx_len == 0) {
+		mwifiex_dbg(adapter, ERROR, "0 byte cmdrsp\n");
+		mwifiex_map_pci_memory(adapter, skb, MWIFIEX_UPLD_SIZE,
+			PCI_DMA_FROMDEVICE);
+		return 0;
+	}
+
 	skb_trim(skb, rx_len);
 	skb_pull(skb, INTF_HEADER_LEN);
 
@@ -1681,6 +1696,9 @@ static int mwifiex_pcie_cmdrsp_complete(struct mwifiex_adapter *adapter,
 	struct pcie_service_card *card = adapter->card;
 
 	if (skb) {
+		mwifiex_dbg(adapter, ERROR, "jpw: %s skb %p: len %d, data_len %d, head %p,"
+			"data %p, tail %d, end %d\n", __func__, skb, skb->len, skb->data_len, skb->head,
+			skb->data, skb->tail, skb->end);
 		card->cmdrsp_buf = skb;
 		skb_push(card->cmdrsp_buf, INTF_HEADER_LEN);
 		if (mwifiex_map_pci_memory(adapter, skb, MWIFIEX_UPLD_SIZE,
@@ -2175,6 +2193,7 @@ static int mwifiex_process_int_status(struct mwifiex_adapter *adapter)
 	pcie_ireg = adapter->int_status;
 	adapter->int_status = 0;
 	spin_unlock_irqrestore(&adapter->int_lock, flags);
+	mwifiex_dbg(adapter, INTR, "popped ireg: 0x%08x\n", pcie_ireg);
 
 	while (pcie_ireg & HOST_INTR_MASK) {
 		if (pcie_ireg & HOST_INTR_DNLD_DONE) {
@@ -2215,6 +2234,7 @@ static int mwifiex_process_int_status(struct mwifiex_adapter *adapter)
 				return ret;
 		}
 
+#if 0
 		if (mwifiex_pcie_ok_to_access_hw(adapter)) {
 			if (mwifiex_read_reg(adapter, PCIE_HOST_INT_STATUS,
 					     &pcie_ireg)) {
@@ -2234,6 +2254,7 @@ static int mwifiex_process_int_status(struct mwifiex_adapter *adapter)
 			}
 
 		}
+#endif
 	}
 	mwifiex_dbg(adapter, INTR,
 		    "info: cmd_sent=%d data_sent=%d\n",
