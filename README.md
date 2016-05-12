@@ -18,7 +18,7 @@ sudo rm /lib/modules/$(uname -r)/kernel/drivers/net/wireless/mwifiex/*.ko
 sudo depmod
 ```
 
-Install the new modules (this will copy files to `/lib/modules/$(uname -r)/extra`
+Install the new modules (this will copy files to `/lib/modules/$(uname -r)/extra`)
 
 ```
 sudo make install
